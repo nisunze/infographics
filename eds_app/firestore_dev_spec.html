@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firestore Application Specification - Interactive Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 
+        Chosen Palette: "Vibrant Professional" (Custom Mix based on Energetic & Playful theme)
+        - Page Background: #FDFEFE
+        - Card Background: #FFFFFF
+        - Text Primary: #2C3E50 
+        - Text Secondary: #7F8C8D
+        - Accent 1 (Primary - e.g., Titles, Main Chart): #E74C3C (Alizarin Crimson)
+        - Accent 2 (Secondary - e.g., Highlights, Chart Segment): #F1C40F (Sun Flower Yellow)
+        - Accent 3 (Tertiary - e.g., Borders, Chart Segment): #1ABC9C (Turquoise)
+        - Accent 4 (Quaternary - e.g., Icons, Chart Segment): #8E44AD (Wisteria Purple)
+        - Accent 5 (Borders/Dividers): #3498DB (Peter River Blue)
+
+        Application Structure Plan:
+        The SPA is structured as a single, scrollable page with distinct sections for each major part of the Firestore specification.
+        1. Hero/Header: Title and brief introduction.
+        2. Application Architecture Highlights: Flutter, Offline-first, Hive & Firestore Sync.
+        3. Overview Section: High-level purpose of the specification.
+        4. Collection Naming Convention: Visual display of the format and examples.
+        5. Document Schema for Form Records:
+            - Universal Metadata: Donut chart visualizing categories of metadata fields.
+            - Location Data Handling: Description of universal metadata.location, then detailed model for dedicated location forms, clarifying dual storage. Highlight MAX_ACCEPTABLE_ACCURACY.
+            - Soft Deletion: Clear visual and textual explanation.
+        6. `users` Collection Schema: Key fields presented, highlighting efficient project access query. Full width display.
+        7. `eds_project` Collection Schema: Key fields and roles presented. Emphasized backend creation; frontend view and specific role assignment capabilities (Owner assigns managers/surveyors). Full width display.
+        8. Access Control Logic: Simplified HTML/CSS flowchart depicting the hierarchy. Owner cannot transfer ownership or manage project doc (except role arrays) from frontend.
+        9. Firestore Indexing Strategy: Details on automatic and custom index creation.
+        10. General Rules & Conclusion: Summary of key operational rules.
+        User Flow: Linear scrolling through the infographic sections. Interactivity is primarily through chart tooltips and visual digestion of structured information.
+
+        Visualization & Content Choices:
+        - Overall Structure: Single Page Application (SPA) using HTML/Tailwind. Goal: Organize/Inform. Justification: Easy top-to-bottom consumption of the spec. Method: HTML/CSS. NO SVG.
+        - App Architecture: Styled Text Blocks with Icons. Goal: Inform. Justification: Highlight key tech stack features. Method: HTML/CSS. NO SVG.
+        - Collection Naming: Styled Text Block. Goal: Inform. Justification: Direct representation of format. Method: HTML/CSS. NO SVG.
+        - Universal Metadata Breakdown: Donut Chart (Chart.js Canvas). Goal: Compare/Inform (proportions of field types). Justification: Visually appealing for parts-of-a-whole. Method: Chart.js. NO SVG.
+        - Location Data Types: Styled text for universal, then code block for detailed model. Goal: Inform/Clarify. Justification: Clear presentation of both aspects. Method: HTML/CSS. NO SVG.
+        - MAX_ACCEPTABLE_ACCURACY: Prominent Text Stat. Goal: Inform. Justification: Highlight key parameter. Method: HTML/CSS. NO SVG.
+        - `users` & `eds_project` Schemas: Structured HTML lists/cards (full width). Goal: Organize/Inform. Justification: Clear presentation of schema fields. Method: HTML/CSS. NO SVG.
+        - `eds_project` Role Illustration: Horizontal Bar Chart (Chart.js Canvas). Goal: Compare/Inform (illustrative number of users per role). Justification: Visual comparison of role distribution. Method: Chart.js. NO SVG.
+        - Access Control Hierarchy: HTML/CSS Flowchart. Goal: Organize. Justification: Visual flow of permissions. Method: HTML/CSS. NO SVG.
+        - Indexing Strategy: Styled Text Block. Goal: Inform. Justification: Clear explanation of index management. Method: HTML/CSS. NO SVG.
+        - Soft Deletion & General Rules: Styled Text Blocks with Icons (Unicode). Goal: Inform. Justification: Clear, concise explanations. Method: HTML/CSS. NO SVG.
+
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. All charts are rendered using Chart.js on Canvas elements. Diagrams are implemented using HTML and Tailwind CSS.
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #FDFEFE; color: #2C3E50; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 280px; max-height: 320px; }
+        @media (min-width: 768px) { .chart-container { height: 320px; max-height: 350px; max-width: 600px;} }
+        .stat-highlight { color: #E74C3C; font-weight: 700; font-size: 2.5rem; }
+        .section-card { background-color: #FFFFFF; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 2rem; }
+        .section-title { font-size: 1.75rem; font-weight: 600; color: #2C3E50; margin-bottom: 1rem; border-bottom: 2px solid #3498DB; padding-bottom: 0.5rem; }
+        .subsection-title { font-size: 1.25rem; font-weight: 600; color: #E74C3C; margin-top: 1rem; margin-bottom: 0.75rem; }
+        .code-like { background-color: #ECF0F1; color: #2C3E50; padding: 0.75rem; border-radius: 0.375rem; font-family: monospace; white-space: pre-wrap; word-break: break-all; }
+        .flowchart-item { background-color: #FFFFFF; border: 2px solid #3498DB; padding: 0.75rem; border-radius: 0.5rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width:180px; flex-grow: 1; }
+        .flowchart-arrow { font-size: 1.5rem; color: #1ABC9C; margin: 0.5rem 0; display: flex; justify-content: center; align-items: center; }
+        .tech-highlight-card { background-color: #FDFEFE; border: 1px solid #D5DBDB; padding: 1rem; border-radius: 0.5rem; text-align: center; }
+        .tech-highlight-card strong { color: #8E44AD; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="text-white py-10 shadow-lg" style="background-color: #2C3E50;">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold">Firestore Application Specification</h1>
+            <p class="text-lg md:text-xl mt-2" style="color: #BDC3C7;">An Interactive Visual Guide for an Offline-First Flutter App</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 md:px-6 py-8">
+
+        <section class="section-card">
+            <h2 class="section-title">Application Architecture Highlights</h2>
+            <p class="text-base mb-4" style="color: #7F8C8D;">This specification details the backend data structure for a robust, offline-first mobile application.</p>
+            <div class="grid md:grid-cols-3 gap-4 text-sm">
+                <div class="tech-highlight-card">
+                    <span class="text-3xl block mb-2">📱</span>
+                    <strong>Flutter Application</strong>
+                    <p style="color: #7F8C8D;">Cross-platform mobile app for seamless user experience.</p>
+                </div>
+                <div class="tech-highlight-card">
+                    <span class="text-3xl block mb-2">📉</span>
+                    <strong>Offline-First Approach</strong>
+                    <p style="color: #7F8C8D;">Ensures functionality even without an active internet connection.</p>
+                </div>
+                <div class="tech-highlight-card">
+                    <span class="text-3xl block mb-2">🔄</span>
+                    <strong>Hive & Firestore Sync</strong>
+                    <p style="color: #7F8C8D;">Local data storage with Hive, syncing to Firestore. Authentication is handled directly (e.g., Firebase Auth).</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <h2 class="section-title">1. Overview of Firestore Backend</h2>
+            <p class="text-base" style="color: #7F8C8D;">This document outlines the Firestore data structure, schema, and access control mechanisms. The design emphasizes consistent metadata, robust location data handling, project-based organization, and role-based access control for the backend supporting the Flutter application.</p>
+        </section>
+
+        <section class="section-card">
+            <h2 class="section-title">2. Collection Naming Convention</h2>
+            <p class="text-base mb-3" style="color: #7F8C8D;">All form-specific collections follow a standardized naming convention for clarity and project association.</p>
+            <div class="p-4 rounded-md text-center" style="background-color: #ECF0F1;">
+                <p class="text-sm font-semibold" style="color: #2C3E50;">Format:</p>
+                <p class="text-xl font-mono my-2" style="color: #E74C3C;">&lt;eds_project_id&gt;_&lt;form_name&gt;</p>
+                <p class="text-sm" style="color: #7F8C8D;">Examples: <code class="text-xs p-1 rounded" style="background-color: #BDC3C7; color: #2C3E50;">sffebflw_burera_notes</code>, <code class="text-xs p-1 rounded" style="background-color: #BDC3C7; color: #2C3E50;">sffebflw_burera_customers</code></p>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <h2 class="section-title">3. Document Schema for Form Records</h2>
+            <p class="text-base mb-4" style="color: #7F8C8D;">Every document includes a mandatory <code style="color: #E74C3C;">metadata</code> object.</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="subsection-title">3.1. Universal Metadata Fields</h3>
+                    <p class="text-sm mb-3" style="color: #7F8C8D;">Key categories of fields present in every record's metadata.</p>
+                    <div class="chart-container h-[250px] md:h-[300px]">
+                        <canvas id="metadataChart"></canvas>
+                    </div>
+                </div>
+                <div class="code-like text-xs">
+{
+  "metadata": {
+    "created_at": "&lt;Timestamp&gt;",
+    "updated_at": "&lt;Timestamp&gt;",
+    "location": "&lt;GeoPoint&gt;",
+    "is_deleted": "&lt;boolean&gt;",
+    "user_email": "&lt;string&gt;",
+    "user_id": "&lt;string&gt;",
+    "project_id": "&lt;string&gt;"
+  }
+  // ... other form-specific fields
+}
+                </div>
+            </div>
+
+            <h3 class="subsection-title mt-6">3.2. Location Data Handling</h3>
+            <div class="mb-4 p-4 rounded-md border" style="border-color: #1ABC9C;">
+                <h4 class="font-semibold text-md mb-1" style="color: #1ABC9C;">Universal `metadata.location` (GeoPoint)</h4>
+                <p class="text-xs" style="color: #7F8C8D;">A Firestore GeoPoint (`{latitude, longitude}`) is <strong style="color: #16A085">mandatory in the `metadata` object of ALL form records</strong>.
+                For forms not specifically capturing location, this might be a default project location or general entry. For dedicated location-capturing forms, this GeoPoint is derived from the detailed capture (see below), ensuring a consistent, indexable point for all records. Used for quick map centering and general queries.</p>
+            </div>
+
+            <div class="p-4 rounded-md border" style="border-color: #F1C40F;">
+                <h4 class="font-semibold text-md mb-1" style="color: #F1C40F;">Dedicated Location-Capturing Forms: Dual Storage & Detailed Model</h4>
+                <p class="text-xs mb-2" style="color: #7F8C8D;">Forms specifically designed to capture precise geographic information will store a detailed location object (e.g., <code class="text-xs p-1 rounded" style="background-color: #FEF9E7; color: #B7950B;">detailed_location_capture</code>) at the root level of the document <strong style="color: #B7950B;">IN ADDITION TO</strong> the derived <code class="text-xs p-1 rounded" style="background-color: #FEF9E7; color: #B7950B;">metadata.location</code> GeoPoint. This means location data for these forms is effectively stored twice to serve different purposes.</p>
+                <p class="text-xs font-semibold mb-1" style="color: #7F8C8D;">Example <code class="text-xs p-1 rounded" style="background-color: #FEF9E7; color: #B7950B;">detailed_location_capture</code> object structure:</p>
+                <div class="code-like text-xs">
+{
+  // ... other form-specific fields
+  "metadata": { /* ... as defined in 3.1 ... */ },
+  "detailed_location_capture": {
+    "latitude": -1.9638561,       // &lt;number&gt;
+    "longitude": 30.0313834,      // &lt;number&gt;
+    "accuracy": 20.1,             // &lt;number&gt; GPS accuracy in meters
+    "altitude": 840.1,            // &lt;number&gt; Elevation in meters
+    "heading": 0,                 // &lt;number&gt; Direction (0-359.9 degrees), optional
+    "speed": 0,                   // &lt;number&gt; Speed in m/s, optional
+    "speedAccuracy": 1.5,         // &lt;number&gt; Speed accuracy in m/s, optional
+    "location_timestamp": "&lt;Timestamp&gt;" // Firestore Timestamp of capture
+  }
+}
+                </div>
+            </div>
+
+            <div class="text-center p-3 rounded-md my-4" style="background-color: #ECF0F1;">
+                <p class="text-sm font-medium" style="color: #2C3E50;">Location Accuracy Threshold (for dedicated forms): <span class="stat-highlight text-2xl !font-bold" style="color:#E74C3C;">10m</span></p>
+                <p class="text-xs" style="color: #7F8C8D;">(`MAX_ACCEPTABLE_ACCURACY`)</p>
+            </div>
+             <p class="text-sm mt-1" style="color: #7F8C8D;"><strong style="color: #8E44AD;">Source:</strong> All location data is intended to come from a geolocator library.</p>
+
+
+            <h3 class="subsection-title mt-6">3.3. Soft Deletion</h3>
+            <div class="flex items-center p-3 rounded-md" style="background-color: #FEF9E7;">
+                <span class="text-2xl mr-3">🗑️</span>
+                <p class="text-sm" style="color: #7F8C8D;">Records are hidden by setting <code style="color: #E74C3C;">metadata.is_deleted = true</code>. Frontend filters these out from normal views.</p>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <h2 class="section-title">4. `users` Collection Schema</h2>
+            <p class="text-base mb-3" style="color: #7F8C8D;">Stores user profiles and project affiliations. Path: <code style="color: #1ABC9C;">users/{user_id}</code></p>
+            <div class="code-like text-xs">
+{
+  "email": "&lt;string&gt;",
+  "name": "&lt;string&gt;",
+  "last_login": "&lt;Timestamp&gt;",
+  "active_project_id": "&lt;eds_project_id&gt;",
+  "active_project_updated_at": "&lt;Timestamp&gt;",
+  "active_customer_collection": "&lt;string&gt;",
+  "active_infrastructure_collection": "&lt;string&gt;",
+  "projects": { <span style="color:#E74C3C;">// Queried for efficient project access</span>
+    "owner": ["&lt;eds_project_id&gt;", ...],
+    "project_survey_managers": ["&lt;eds_project_id&gt;", ...],
+    "project_field_surveyors": ["&lt;eds_project_id&gt;", ...]
+  }
+}
+            </div>
+             <p class="text-xs mt-2 p-2 rounded-md" style="color: #7F8C8D; background-color: #F0F9FF; border-left: 3px solid #3498DB;">
+                <strong style="color: #3498DB;">Efficiency Note:</strong> To get projects a user has access to, the application queries the `projects` map within this user document, avoiding inefficient scans of all `eds_project` documents.
+            </p>
+        </section>
+
+        <section class="section-card">
+            <h2 class="section-title">5. `eds_project` Collection Schema</h2>
+            <p class="text-base mb-3" style="color: #7F8C8D;">Stores project metadata and role assignments by user email. Path: <code style="color: #1ABC9C;">eds_project/{eds_project_id}</code></p>
+             <p class="text-sm mb-3 p-3 rounded-md shadow" style="color: #704214; background-color: #FFF3E0; border-left: 4px solid #FF9800;">
+                <span class="font-bold text-base block mb-1" style="color: #E65100;">Critical Backend Control:</span>
+                `eds_project` documents are <strong style="color: #BF360C;">exclusively created and deleted by a backend API.</strong>
+                The frontend application <strong style="color: #BF360C;">cannot</strong> create, delete, or hide these project documents.
+                Frontend actions are limited to viewing project details and, for authorized roles (Owner), assigning or de-assigning users to `project_survey_manager` and `project_field_surveyor` roles within an <strong style="color: #BF360C;">existing</strong> project.
+            </p>
+            <div class="code-like text-xs mb-4">
+{
+  "eds_project_id": "&lt;string&gt;",
+  "project_name": "&lt;string&gt;",
+  "project_location": "&lt;string&gt;",
+  "owner": "&lt;user_email&gt;", <span style="color:#E74C3C;">// Unique Owner</span>
+  "project_survey_managers": ["&lt;user_email&gt;", ...],
+  "project_field_surveyors": ["&lt;user_email&gt;", ...],
+  "project_editors": ["&lt;user_email&gt;", ...],
+  "project_viewers": ["&lt;user_email&gt;", ...],
+  "creation_time": "&lt;Timestamp&gt;",
+  "updated_at": "&lt;Timestamp&gt;",
+  "variables": "&lt;object&gt;"
+}
+            </div>
+            <h4 class="font-semibold text-md mb-2" style="color: #8E44AD;">Illustrative Role Counts:</h4>
+            <div class="chart-container h-[200px] md:h-[240px]">
+                <canvas id="projectRolesChart"></canvas>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <h2 class="section-title">6. Access Control Logic (Frontend Perspective)</h2>
+            <p class="text-base mb-4" style="color: #7F8C8D;">Permissions for frontend actions related to projects and their data. Project document lifecycle (create/delete) is backend-controlled.</p>
+            <div class="space-y-4 md:space-y-0 md:flex md:flex-col lg:flex-row md:justify-around md:items-stretch text-xs">
+                <div class="flowchart-item mb-2 lg:mb-0">
+                    <strong style="color: #E74C3C;">Owner</strong>
+                    <p style="color: #7F8C8D;">Full CRUD on <strong style="color: #E74C3C;">form data within</strong> the project. Can assign/de-assign users to `project_survey_manager` & `project_field_surveyor` roles for the project. Views project details. <strong style="color: #E74C3C;">Cannot create/delete/hide project document or transfer ownership via frontend.</strong></p>
+                </div>
+                <div class="flowchart-arrow self-center lg:self-auto lg:mx-4">➔</div>
+                <div class="flowchart-item mb-2 lg:mb-0">
+                    <strong style="color: #F1C40F;">Project Survey Manager</strong>
+                    <p style="color: #7F8C8D;">Assigned by Owner. Manages (adds/removes) `project_field_surveyors` for the project. Read all project form records. Create/Update of form records may be allowed. Views project details.</p>
+                </div>
+                <div class="flowchart-arrow self-center lg:self-auto lg:mx-4">➔</div>
+                <div class="flowchart-item">
+                    <strong style="color: #1ABC9C;">Project Field Surveyor</strong>
+                    <p style="color: #7F8C8D;">Assigned by Owner/Manager. Create form records. R/U own form records. Can add (but not remove) other users to the `project_field_surveyors` role for the project. Views project details.</p>
+                </div>
+            </div>
+            <p class="text-xs text-center mt-4" style="color: #7F8C8D;">Backend roles (Viewer, Editor) for admin tasks, enforced by Security Rules, have broader direct DB access.</p>
+        </section>
+
+        <section class="section-card">
+            <h2 class="section-title">7. Firestore Indexing Strategy</h2>
+            <p class="text-base mb-3" style="color: #7F8C8D;">Efficient querying is supported by a combination of automatic and managed indexes.</p>
+            <div class="p-4 rounded-md mb-3" style="background-color: #E8F8F5; border-left: 4px solid #1ABC9C;">
+                <h4 class="font-semibold text-md mb-1" style="color: #16A085;">Standard Indexes (Backend Created)</h4>
+                <p class="text-sm" style="color: #7F8C8D;">The backend service automatically creates standard composite indexes during project creation for optimal performance on common queries. These typically include indexes on:</p>
+                <ul class="list-disc list-inside ml-4 text-sm" style="color: #7F8C8D;">
+                    <li><code class="text-xs p-1 rounded" style="background-color: #D0ECE7; color: #16A085;">metadata.updated_at</code> (for sorting by update time)</li>
+                    <li><code class="text-xs p-1 rounded" style="background-color: #D0ECE7; color: #16A085;">metadata.user_email</code> (for filtering by user)</li>
+                    <li><code class="text-xs p-1 rounded" style="background-color: #D0ECE7; color: #16A085;">metadata.is_deleted</code> (for filtering soft-deleted records)</li>
+                </ul>
+            </div>
+            <div class="p-4 rounded-md" style="background-color: #FDEDEC; border-left: 4px solid #E74C3C;">
+                <h4 class="font-semibold text-md mb-1" style="color: #C0392B;">Custom/Additional Indexes</h4>
+                <p class="text-sm" style="color: #7F8C8D;">If the Flutter application developers identify a need for additional Firestore indexes to support new query patterns or optimize specific frontend features:</p>
+                <ol class="list-decimal list-inside ml-4 text-sm" style="color: #7F8C8D;">
+                    <li>Developers can create these indexes in their development/testing Firebase project via the console or CLI.</li>
+                    <li>Once validated, these new index definitions must be communicated to the backend team.</li>
+                    <li>The backend team will then incorporate these additional index configurations into the standard project creation process, ensuring they are available for all future projects.</li>
+                </ol>
+            </div>
+        </section>
+        
+        <section class="section-card">
+            <h2 class="section-title">8. General Rules</h2>
+             <ul class="list-disc list-inside space-y-2 text-sm" style="color: #7F8C8D;">
+                <li>Frontend queries filter out soft-deleted records (`metadata.is_deleted == true`) by default.</li>
+                <li>Firestore Security Rules are critical for database-level permission enforcement, aligning with this defined logic.</li>
+                <li>Users operate within their assigned projects and roles.</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-6 mt-8 border-t" style="border-color: #D5DBDB;">
+        <p class="text-sm" style="color: #7F8C8D;">Firestore Application Specification Infographic &copy; 2025</p>
+    </footer>
+
+    <script>
+        const CHART_PRIMARY_TEXT_COLOR = '#2C3E50';
+        const CHART_ACCENT_1 = '#E74C3C'; // Alizarin Crimson
+        const CHART_ACCENT_2 = '#F1C40F'; // Sun Flower Yellow
+        const CHART_ACCENT_3 = '#1ABC9C'; // Turquoise
+        const CHART_ACCENT_4 = '#8E44AD'; // Wisteria Purple
+        const CHART_ACCENT_5 = '#3498DB'; // Peter River Blue
+        const CHART_GRID_COLOR = '#ECF0F1';
+
+        function wrapLabel(str, maxWidth = 16) { // Default maxWidth to 16
+            if (typeof str !== 'string') return str; // Return if not a string
+            if (str.length <= maxWidth) {
+                return str;
+            }
+            const words = str.split(' ');
+            let currentLine = '';
+            const lines = [];
+            for (const word of words) {
+                if (currentLine.length === 0) {
+                    currentLine = word;
+                } else if ((currentLine + ' ' + word).length <= maxWidth) {
+                    currentLine += ' ' + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            if (currentLine.length > 0) {
+                lines.push(currentLine);
+            }
+            return lines.length > 0 ? lines : [str]; // Ensure it returns an array even for single line if processed
+        }
+        
+        const commonChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: CHART_PRIMARY_TEXT_COLOR, font: { size: 11 } },
+                    position: 'bottom',
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(44, 62, 80, 0.9)', // Dark Slate Blue, semi-transparent
+                    titleColor: '#FFFFFF',
+                    bodyColor: '#FFFFFF',
+                    padding: 10,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            if (!item || !item.chart.data.labels) return '';
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                              return label.join(' ');
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+        };
+
+        // Metadata Chart (Donut)
+        const metadataCtx = document.getElementById('metadataChart')?.getContext('2d');
+        if (metadataCtx) {
+            new Chart(metadataCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Timestamps (2)', 'Location (1)', 'User Info (3)', 'Flags/IDs (2)'],
+                    datasets: [{
+                        label: 'Metadata Fields',
+                        data: [2, 1, 3, 2], // created_at, updated_at | location | user_email, user_id, project_id | is_deleted
+                        backgroundColor: [CHART_ACCENT_1, CHART_ACCENT_2, CHART_ACCENT_3, CHART_ACCENT_4],
+                        borderColor: '#FFFFFF',
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: { ...commonChartOptions, cutout: '65%' }
+            });
+        }
+
+        // Project Roles Chart (Horizontal Bar)
+        const projectRolesCtx = document.getElementById('projectRolesChart')?.getContext('2d');
+        if (projectRolesCtx) {
+            new Chart(projectRolesCtx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        'Owner', 
+                        wrapLabel('Survey Managers'), 
+                        wrapLabel('Field Surveyors'), 
+                        'Editors', 
+                        'Viewers'
+                    ],
+                    datasets: [{
+                        label: 'Illustrative User Count',
+                        data: [1, 2, 10, 1, 3], // Example data
+                        backgroundColor: [CHART_ACCENT_1, CHART_ACCENT_2, CHART_ACCENT_3, CHART_ACCENT_4, CHART_ACCENT_5],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    ...commonChartOptions,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { 
+                            ticks: { color: CHART_PRIMARY_TEXT_COLOR, font: {size: 10}, stepSize: 1 }, 
+                            grid: { color: CHART_GRID_COLOR, drawBorder: false } 
+                        },
+                        y: { 
+                            ticks: { color: CHART_PRIMARY_TEXT_COLOR, font: {size: 10} }, 
+                            grid: { display: false } 
+                        }
+                    },
+                    plugins: { ...commonChartOptions.plugins, legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
