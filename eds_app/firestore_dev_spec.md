@@ -1,12 +1,13 @@
-Firestore Application Specification - Markdown Version
-Application Architecture Highlights
+# Firestore Application Specification - Interactive Infographic
+
+## Application Architecture Highlights
 This specification details the backend data structure for a robust, offline-first mobile application.
 
-Flutter Application: Cross-platform mobile app for seamless user experience.
+- **Flutter Application**: Cross-platform mobile app for seamless user experience.
 
-Offline-First Approach: Ensures functionality even without an active internet connection.
+- **Offline-First Approach**: Ensures functionality even without an active internet connection.
 
-Hive & Firestore Sync: Local data storage with Hive, syncing to Firestore. Authentication is handled directly (e.g., Firebase Auth).
+- **Hive & Firestore Sync**: Local data storage with Hive, syncing to Firestore. Authentication is handled directly (e.g., Firebase Auth).
 
 1. Overview of Firestore Backend
 This document outlines the Firestore data structure, schema, and access control mechanisms. The design emphasizes consistent metadata, robust location data handling, project-based organization, and role-based access control for the backend supporting the Flutter application.
@@ -72,6 +73,48 @@ Source: All location data is intended to come from a geolocator library.
 3.3. Soft Deletion
 Records are hidden by setting metadata.is_deleted = true. Frontend filters these out from normal views.
 
+3.4. Example Base Form: `sample_form`
+This `sample_form` serves as a foundational template for creating other specific data collection forms. It incorporates the standard `metadata` and, being a location-aware form, the `detailed_location_capture` object. Other forms can extend this base by adding their unique fields.
+
+**Core Principle:** The consistent use of `metadata` and `detailed_location_capture` (where applicable) across all forms promotes a strong core structure, reducing redundancy and ensuring data integrity. This allows for a common library/logic in the Flutter app to handle these base fields.
+
+Schema for a document in `eds_project_id_sample_form` collection:
+
+```json
+{
+  "metadata": {
+    "created_at": "<Timestamp>",
+    "updated_at": "<Timestamp>",
+    "location": "<GeoPoint>", // Derived from detailed_location_capture.latitude/longitude
+    "is_deleted": false,
+    "user_email": "<string>",
+    "user_id": "<string>",
+    "project_id": "<string>" // Matches eds_project_id prefix
+  },
+  "detailed_location_capture": { // As this is a location-taking form
+    "latitude": "<number>",
+    "longitude": "<number>",
+    "accuracy": "<number>",
+    "altitude": "<number>",
+    "heading": "<number>",
+    "speed": "<number>",
+    "speedAccuracy": "<number>",
+    "location_timestamp": "<Timestamp>"
+  },
+  "name": "<string>",                 // Name of the sample/item
+  "notes": "<string>",                // General notes
+  "image": "<string>",                // URL to a primary image
+  "images": [                       // List of URLs for additional images
+    "<string_url_1>",
+    "<string_url_2>"
+    // Max items defined by MAX_SAMPLE_FORM_IMAGES constant
+  ]
+  // Potentially other sample_form specific fields
+}
+```
+
+A constant like `MAX_SAMPLE_FORM_IMAGES` (e.g., 5) would be defined in the application to limit the number of image URLs in the `images` list.
+
 4. users Collection Schema
 Stores user profiles and project affiliations. Path: users/{user_id}
 
@@ -119,39 +162,25 @@ Frontend actions are limited to viewing project details and, for authorized role
 6. Access Control Logic (Frontend Perspective)
 Permissions for frontend actions related to projects and their data. Project document lifecycle (create/delete) is backend-controlled.
 
-Owner:
+**Owner:**
+- Full CRUD on form data within the project.
+- Can assign/de-assign users to `project_survey_manager` & `project_field_surveyor` roles for the project.
+- Views project details.
+- Cannot create/delete/hide project document or transfer ownership via frontend.
 
-Full CRUD on form data within the project.
+**Project Survey Manager:**
+- Assigned by Owner.
+- Manages (adds/removes) `project_field_surveyors` for the project.
+- Read all project form records.
+- Create/Update of form records may be allowed.
+- Views project details.
 
-Can assign/de-assign users to project_survey_manager & project_field_surveyor roles for the project.
-
-Views project details.
-
-Cannot create/delete/hide project document or transfer ownership via frontend.
-
-Project Survey Manager:
-
-Assigned by Owner.
-
-Manages (adds/removes) project_field_surveyors for the project.
-
-Read all project form records.
-
-Create/Update of form records may be allowed.
-
-Views project details.
-
-Project Field Surveyor:
-
-Assigned by Owner/Manager.
-
-Create form records.
-
-R/U own form records.
-
-Can add (but not remove) other users to the project_field_surveyors role for the project.
-
-Views project details.
+**Project Field Surveyor:**
+- Assigned by Owner/Manager.
+- Create form records.
+- R/U own form records.
+- Can add (but not remove) other users to the `project_field_surveyors` role for the project.
+- Views project details.
 
 Backend roles (Viewer, Editor) for admin tasks, enforced by Security Rules, have broader direct DB access.
 
@@ -161,24 +190,22 @@ Efficient querying is supported by a combination of automatic and managed indexe
 Standard Indexes (Backend Created)
 The backend service automatically creates standard composite indexes during project creation for optimal performance on common queries. These typically include indexes on:
 
-metadata.updated_at (for sorting by update time)
-
-metadata.user_email (for filtering by user)
-
-metadata.is_deleted (for filtering soft-deleted records)
+- `metadata.updated_at` (for sorting by update time)
+- `metadata.user_email` (for filtering by user)
+- `metadata.is_deleted` (for filtering soft-deleted records)
 
 Custom/Additional Indexes
 If the Flutter application developers identify a need for additional Firestore indexes:
 
-Developers can create these indexes in their development/testing Firebase project.
-
-Once validated, these new index definitions must be communicated to the backend team.
-
-The backend team will then incorporate these additional index configurations into the standard project creation process.
+1. Developers can create these indexes in their development/testing Firebase project via the console or CLI.
+2. Once validated, these new index definitions must be communicated to the backend team.
+3. The backend team will then incorporate these additional index configurations into the standard project creation process, ensuring they are available for all future projects.
 
 8. General Rules
-Frontend queries filter out soft-deleted records (metadata.is_deleted == true) by default.
+- Frontend queries filter out soft-deleted records (metadata.is_deleted == true) by default.
+- Firestore Security Rules are critical for database-level permission enforcement, aligning with this defined logic.
+- Users operate within their assigned projects and roles.
 
-Firestore Security Rules are critical for database-level permission enforcement, aligning with this defined logic.
+---
 
-Users operate within their assigned projects and roles.
+*Firestore Application Specification Infographic © 2025*

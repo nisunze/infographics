@@ -29,6 +29,7 @@
             - Universal Metadata: Donut chart visualizing categories of metadata fields.
             - Location Data Handling: Description of universal metadata.location, then detailed model for dedicated location forms, clarifying dual storage. Highlight MAX_ACCEPTABLE_ACCURACY.
             - Soft Deletion: Clear visual and textual explanation.
+            - Example Base Form (`sample_form`): Schema definition for a foundational form.
         6. `users` Collection Schema: Key fields presented, highlighting efficient project access query. Full width display.
         7. `eds_project` Collection Schema: Key fields and roles presented. Emphasized backend creation; frontend view and specific role assignment capabilities (Owner assigns managers/surveyors). Full width display.
         8. Access Control Logic: Simplified HTML/CSS flowchart depicting the hierarchy. Owner cannot transfer ownership or manage project doc (except role arrays) from frontend.
@@ -43,6 +44,7 @@
         - Universal Metadata Breakdown: Donut Chart (Chart.js Canvas). Goal: Compare/Inform (proportions of field types). Justification: Visually appealing for parts-of-a-whole. Method: Chart.js. NO SVG.
         - Location Data Types: Styled text for universal, then code block for detailed model. Goal: Inform/Clarify. Justification: Clear presentation of both aspects. Method: HTML/CSS. NO SVG.
         - MAX_ACCEPTABLE_ACCURACY: Prominent Text Stat. Goal: Inform. Justification: Highlight key parameter. Method: HTML/CSS. NO SVG.
+        - `sample_form` Schema: Code block. Goal: Inform/Define. Justification: Clear definition of base form. Method: HTML/CSS. NO SVG.
         - `users` & `eds_project` Schemas: Structured HTML lists/cards (full width). Goal: Organize/Inform. Justification: Clear presentation of schema fields. Method: HTML/CSS. NO SVG.
         - `eds_project` Role Illustration: Horizontal Bar Chart (Chart.js Canvas). Goal: Compare/Inform (illustrative number of users per role). Justification: Visual comparison of role distribution. Method: Chart.js. NO SVG.
         - Access Control Hierarchy: HTML/CSS Flowchart. Goal: Organize. Justification: Visual flow of permissions. Method: HTML/CSS. NO SVG.
@@ -116,7 +118,7 @@
 
         <section class="section-card">
             <h2 class="section-title">3. Document Schema for Form Records</h2>
-            <p class="text-base mb-4" style="color: #7F8C8D;">Every document includes a mandatory <code style="color: #E74C3C;">metadata</code> object.</p>
+            <p class="text-base mb-4" style="color: #7F8C8D;">Every document includes a mandatory <code style="color: #E74C3C;">metadata</code> object and adheres to a core structure.</p>
 
             <div class="grid md:grid-cols-2 gap-6">
                 <div>
@@ -183,6 +185,47 @@
                 <span class="text-2xl mr-3">🗑️</span>
                 <p class="text-sm" style="color: #7F8C8D;">Records are hidden by setting <code style="color: #E74C3C;">metadata.is_deleted = true</code>. Frontend filters these out from normal views.</p>
             </div>
+
+            <h3 class="subsection-title mt-8">3.4. Example Base Form: `sample_form`</h3>
+            <p class="text-sm mb-2" style="color: #7F8C8D;">This `sample_form` serves as a foundational template for creating other specific data collection forms. It incorporates the standard `metadata` and, being a location-aware form, the `detailed_location_capture` object. Other forms can extend this base by adding their unique fields.</p>
+            <div class="p-3 rounded-md mb-2" style="background-color: #F4F6F7; border-left: 4px solid #8E44AD;">
+                 <p class="text-xs" style="color: #7F8C8D;"><strong style="color: #8E44AD;">Core Principle:</strong> The consistent use of `metadata` and `detailed_location_capture` (where applicable) across all forms promotes a strong core structure, reducing redundancy and ensuring data integrity. This allows for a common library/logic in the Flutter app to handle these base fields.</p>
+            </div>
+            <p class="text-xs font-semibold mb-1" style="color: #7F8C8D;">Schema for a document in `eds_project_id_sample_form` collection:</p>
+            <div class="code-like text-xs">
+{
+  "metadata": {
+    "created_at": "&lt;Timestamp&gt;",
+    "updated_at": "&lt;Timestamp&gt;",
+    "location": "&lt;GeoPoint&gt;", // Derived from detailed_location_capture.latitude/longitude
+    "is_deleted": false,
+    "user_email": "&lt;string&gt;",
+    "user_id": "&lt;string&gt;",
+    "project_id": "&lt;string&gt;" // Matches eds_project_id prefix
+  },
+  "detailed_location_capture": { // As this is a location-taking form
+    "latitude": "&lt;number&gt;",
+    "longitude": "&lt;number&gt;",
+    "accuracy": "&lt;number&gt;",
+    "altitude": "&lt;number&gt;",
+    "heading": "&lt;number&gt;",
+    "speed": "&lt;number&gt;",
+    "speedAccuracy": "&lt;number&gt;",
+    "location_timestamp": "&lt;Timestamp&gt;"
+  },
+  "name": "&lt;string&gt;",                 // Name of the sample/item
+  "notes": "&lt;string&gt;",                // General notes
+  "image": "&lt;string&gt;",                // URL to a primary image
+  "images": [                       // List of URLs for additional images
+    "&lt;string_url_1&gt;",
+    "&lt;string_url_2&gt;"
+    // Max items defined by MAX_SAMPLE_FORM_IMAGES constant
+  ]
+  // Potentially other sample_form specific fields
+}
+            </div>
+            <p class="text-xs mt-1" style="color: #7F8C8D;">A constant like <code class="text-xs p-1 rounded" style="background-color: #BDC3C7; color: #2C3E50;">MAX_SAMPLE_FORM_IMAGES</code> (e.g., 5) would be defined in the application to limit the number of image URLs in the `images` list.</p>
+
         </section>
 
         <section class="section-card">
